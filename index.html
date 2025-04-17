@@ -433,11 +433,16 @@
       });
       stages.forEach(stage => {
         if (stage.id <= 8) {
-          document.getElementById(`stage${stage.id}Label`).innerText = `مرحله ${stage.id}: ${stage.title}`;
+          const labelElement = document.getElementById(`stage${stage.id}Label`);
+          if (labelElement) {
+            labelElement.innerText = `مرحله ${stage.id}: ${stage.title}`;
+          }
         }
         if (stage.id === 5) {
-          document.getElementById(`stage5SourceLabel`).innerText = `مرحله 5: حساب مبدا`;
-          document.getElementById(`stage5DestLabel`).innerText = `حساب مقصد`;
+          const sourceLabel = document.getElementById(`stage5SourceLabel`);
+          const destLabel = document.getElementById(`stage5DestLabel`);
+          if (sourceLabel) sourceLabel.innerText = `مرحله 5: حساب مبدا`;
+          if (destLabel) destLabel.innerText = `حساب مقصد`;
         }
       });
       updateAccountOptions(rowId);
@@ -478,12 +483,14 @@
       const stage4 = stages.find(s => s.id === 4);
       if (type && category && stage4.options[type] && stage4.options[type][category]) {
         if (type === 'تهاتری') {
-          document.getElementById(`reasonLabel${rowId}`).innerText = `مرحله 4: بابت درآمد`;
+          const reasonLabel = document.getElementById(`reasonLabel${rowId}`);
+          if (reasonLabel) reasonLabel.innerText = `مرحله 4: بابت درآمد`;
           stage4.options[type][category].forEach(item => {
             reasonSelect.innerHTML += `<option value="${item.income}">${item.income}</option>`;
           });
         } else {
-          document.getElementById(`reasonLabel${rowId}`).innerText = `مرحله 4: ${stage4.title}`;
+          const reasonLabel = document.getElementById(`reasonLabel${rowId}`);
+          if (reasonLabel) reasonLabel.innerText = `مرحله 4: ${stage4.title}`;
           stage4.options[type][category].forEach(reason => {
             reasonSelect.innerHTML += `<option value="${reason}">${reason}</option>`;
           });
@@ -759,7 +766,7 @@
           </div>
         `;
 
-        if (['select', 'text-checkbox', 'file-checkbox'].includes(stage.type)) {
+        if (['text-checkbox', 'file-checkbox'].includes(stage.type)) {
           div.innerHTML += `
             <div class="mb-2">
               <label>اضافه کردن گزینه:</label>
@@ -769,9 +776,18 @@
             </div>
             <ul id="stageOptions${stage.id}" class="list-disc pl-5"></ul>
           `;
-          if (stage.type === 'select' && [2, 4].includes(stage.id)) {
-            div.innerHTML += `<div id="subOptions${stage.id}"></div>`;
-          }
+        } else if (stage.type === 'select' && stage.id === 1) {
+          div.innerHTML += `
+            <div class="mb-2">
+              <label>اضافه کردن گزینه:</label>
+              <input type="text" id="optionValue${stage.id}" class="border p-2 w-full mb-2" placeholder="مقدار (value)">
+              <input type="text" id="optionLabel${stage.id}" class="border p-2 w-full mb-2" placeholder="برچسب (label)">
+              <button onclick="addStageOption(${stage.id})" class="bg-green-500 text-white p-2">اضافه کردن</button>
+            </div>
+            <ul id="stageOptions${stage.id}" class="list-disc pl-5"></ul>
+          `;
+        } else if (stage.type === 'select' && [2, 4].includes(stage.id)) {
+          div.innerHTML += `<div id="subOptions${stage.id}"></div>`;
         } else if (stage.type === 'double-select') {
           div.innerHTML += `
             <div class="mb-2">
@@ -814,7 +830,7 @@
     // به‌روزرسانی گزینه‌های مرحله
     function updateStageOptions(stageId) {
       const stage = stages.find(s => s.id === parseInt(stageId));
-      if (['select', 'text-checkbox', 'file-checkbox'].includes(stage.type)) {
+      if (['text-checkbox', 'file-checkbox'].includes(stage.type) || (stage.type === 'select' && stage.id === 1)) {
         const list = document.getElementById(`stageOptions${stageId}`);
         list.innerHTML = '';
         stage.options.forEach(opt => {
@@ -826,37 +842,36 @@
             </li>
           `;
         });
-        if (stage.type === 'select' && [2, 4].includes(stage.id)) {
-          const subContainer = document.getElementById(`subOptions${stageId}`);
-          subContainer.innerHTML = '';
-          Object.keys(stage.options).forEach(type => {
-            const div = document.createElement('div');
-            div.className = 'mb-2 nested';
-            div.innerHTML = `
-              <h3 class="font-bold">${stages.find(s => s.id === 1).options.find(o => o.value === type)?.label || type}</h3>
-              <select id="categorySelect${stageId}_${type}" class="border p-2 w-full mb-2">
-                <option value="">دسته‌بندی</option>
-                ${stages.find(s => s.id === 2).options[type]?.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('') || ''}
-              </select>
-              <input type="text" id="subOption${stageId}_${type}" class="border p-2 w-full mb-2" placeholder="بابت">
-              <button onclick="addSubOption(${stageId}, '${type}')" class="bg-green-500 text-white p-2">اضافه کردن بابت</button>
-              <ul id="subOptionList${stageId}_${type}" class="list-disc pl-5"></ul>
-            `;
-            subContainer.appendChild(div);
-            const subList = document.getElementById(`subOptionList${stageId}_${type}`);
-            if (stageId === 4 && type === 'تهاتری') {
-              stage.options[type]['درآمد و هزینه'].forEach(item => {
-                subList.innerHTML += `<li>درآمد: ${item.income}, هزینه: ${item.cost} <button onclick="removeTehaterySubOption(${stageId}, '${type}', '${item.income}', '${item.cost}')" class="text-red-500">حذف</button></li>`;
+      } else if (stage.type === 'select' && [2, 4].includes(stage.id)) {
+        const subContainer = document.getElementById(`subOptions${stageId}`);
+        subContainer.innerHTML = '';
+        Object.keys(stage.options).forEach(type => {
+          const div = document.createElement('div');
+          div.className = 'mb-2 nested';
+          div.innerHTML = `
+            <h3 class="font-bold">${stages.find(s => s.id === 1).options.find(o => o.value === type)?.label || type}</h3>
+            <select id="categorySelect${stageId}_${type}" class="border p-2 w-full mb-2">
+              <option value="">دسته‌بندی</option>
+              ${stages.find(s => s.id === 2).options[type]?.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('') || ''}
+            </select>
+            <input type="text" id="subOption${stageId}_${type}" class="border p-2 w-full mb-2" placeholder="بابت">
+            <button onclick="addSubOption(${stageId}, '${type}')" class="bg-green-500 text-white p-2">اضافه کردن بابت</button>
+            <ul id="subOptionList${stageId}_${type}" class="list-disc pl-5"></ul>
+          `;
+          subContainer.appendChild(div);
+          const subList = document.getElementById(`subOptionList${stageId}_${type}`);
+          if (stageId === 4 && type === 'تهاتری') {
+            stage.options[type]['درآمد و هزینه'].forEach(item => {
+              subList.innerHTML += `<li>درآمد: ${item.income}, هزینه: ${item.cost} <button onclick="removeTehaterySubOption(${stageId}, '${type}', '${item.income}', '${item.cost}')" class="text-red-500">حذف</button></li>`;
+            });
+          } else {
+            Object.keys(stage.options[type]).forEach(category => {
+              stage.options[type][category].forEach(opt => {
+                subList.innerHTML += `<li>${opt} <button onclick="removeSubOption(${stageId}, '${type}', '${category}', '${opt}')" class="text-red-500">حذف</button></li>`;
               });
-            } else {
-              Object.keys(stage.options[type]).forEach(category => {
-                stage.options[type][category].forEach(opt => {
-                  subList.innerHTML += `<li>${opt} <button onclick="removeSubOption(${stageId}, '${type}', '${category}', '${opt}')" class="text-red-500">حذف</button></li>`;
-                });
-              });
-            }
-          });
-        }
+            });
+          }
+        });
       } else if (stage.type === 'double-select') {
         const sourceList = document.getElementById(`sourceAccountList${stageId}`);
         const destList = document.getElementById(`destAccountList${stageId}`);
@@ -1118,5 +1133,5 @@
       refreshForm();
     }
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'931e5cfc3822c5c3',t:'MTc0NDkxODUwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
