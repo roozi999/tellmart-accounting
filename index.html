@@ -1029,4 +1029,77 @@
               </div>
               <div id="step3_${rowCount}" class="hidden mb-2">
                 <label id="stage3Label">مرحله 3: مبلغ (ریال)</label>
-                <input type="text" id="amount${rowCount}" oninput="formatAmount(${rowCount})" class="border p-2 w-full" placeholder
+                <input type="text" id="amount${rowCount}" oninput="formatAmount(${rowCount})" class="border p-2 w-full" placeholder="مثال: 200,000">
+                <p id="amountText${rowCount}" class="text-sm text-gray-600 mt-1"></p>
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="confirmAmount${rowCount}" class="mr-2">
+                  <span>مبلغ واردشده درست است</span>
+                </label>
+                <button onclick="goBack(${rowCount}, 3, 2)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 3, 4)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step4_${rowCount}" class="hidden mb-2">
+                <label id="reasonLabel${rowCount}">مرحله 4: بابت</label>
+                <select id="reason${rowCount}" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(${rowCount}, 4, 3)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 4, 5)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step5_${rowCount}" class="hidden mb-2">
+                <label id="stage5SourceLabel">مرحله 5: حساب مبدا</label>
+                <select id="sourceAccount${rowCount}" class="border p-2 w-full mb-2">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <label id="stage5DestLabel">حساب مقصد</label>
+                <select id="destAccount${rowCount}" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(${rowCount}, 5, 4)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 5, 6)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step6_${rowCount}" class="hidden mb-2">
+                <label id="stage6Label">مرحله 6: شماره فاکتور/رسید</label>
+                <input type="text" id="invoice${rowCount}" class="border p-2 w-full">
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="noInvoice${rowCount}" class="mr-2" onchange="toggleInvoice(${rowCount})">
+                  <span>فاقد شماره فاکتور/رسید</span>
+                </label>
+                <button onclick="goBack(${rowCount}, 6, 5)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 6, 7)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step7_${rowCount}" class="hidden mb-2">
+                <label id="stage7Label">مرحله 7: آپلود مدارک</label>
+                <input type="file" id="document${rowCount}" class="border p-2 w-full">
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="noDocument${rowCount}" class="mr-2" onchange="toggleDocument(${rowCount})">
+                  <span>فاقد مدارک</span>
+                </label>
+                <button onclick="goBack(${rowCount}, 7, 6)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 7, 8)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step8_${rowCount}" class="hidden mb-2">
+                <label id="stage8Label">مرحله 8: توضیحات</label>
+                <textarea id="description${rowCount}" class="border p-2 w-full" rows="4" placeholder="توضیحات (اختیاری)"></textarea>
+                <button onclick="goBack(${rowCount}, 8, 7)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="saveTransaction(${rowCount})" class="bg-green-500 text-white p-2 mt-2">مرحله 9: پایان</button>
+              </div>
+              <button onclick="deleteRow(${rowCount})" class="bg-red-500 text-white p-2 mt-2">حذف ردیف</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      initializeForm(rowCount);
+    }
+
+    // اضافه کردن ردیف جدید
+    function addRow() {
+      if (isFormActive) {
+        alert('لطفاً فرم فعلی را ذخیره کنید');
+        return;
+      }
+      refreshForm();
+    }
+  </script>
+</body>
+</html>
