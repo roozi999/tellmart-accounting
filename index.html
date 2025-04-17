@@ -334,8 +334,8 @@
 
     // شبیه‌سازی لاگین
     function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
       const errorDiv = document.getElementById('loginError');
       errorDiv.classList.add('hidden');
       errorDiv.innerText = '';
@@ -1039,4 +1039,26 @@
                 <button onclick="nextStep(${rowCount}, 3, 4)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
               </div>
               <div id="step4_${rowCount}" class="hidden mb-2">
-                <label id="reasonLabel${rowCount}">مر
+                <label id="reasonLabel${rowCount}">مرحله 4: بابت</label>
+                <select id="reason${rowCount}" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(${rowCount}, 4, 3)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 4, 5)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step5_${rowCount}" class="hidden mb-2">
+                <label id="stage5SourceLabel">مرحله 5: حساب مبدا</label>
+                <select id="sourceAccount${rowCount}" class="border p-2 w-full mb-2">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <label id="stage5DestLabel">حساب مقصد</label>
+                <select id="destAccount${rowCount}" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(${rowCount}, 5, 4)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(${rowCount}, 5, 6)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <div id="step6_${rowCount}" class="hidden mb-2">
+                <label id="stage6Label">مرحله 6: شماره فاکتور/رسید</label>
+                <input type="text" id="invoice${rowCount}" class="border p-2 w-full">
+                <label class="flex
