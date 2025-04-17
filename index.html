@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>سیستم حسابداری Tellmart - نسخه تست</title>
+  <title>سیستم حسابداری Tellmart</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { direction: rtl; font-family: Arial, sans-serif; }
@@ -37,10 +37,11 @@
       <div>
         <button onclick="showReports()" class="bg-purple-500 text-white p-2">مشاهده گزارش‌ها</button>
         <button id="dataEntryButton" onclick="showDataEntry()" class="bg-yellow-500 text-white p-2 hidden">مدیریت داده‌ها</button>
+        <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
       </div>
     </div>
     <div class="mb-4">
-      <label>جستجو:</label>
+      <label>جسسستجو:</label>
       <input type="text" id="searchTransactions" class="border p-2 w-full" placeholder="حساب، بابت، یا شماره رسید" oninput="filterTransactions()">
     </div>
     <table id="transactionTable" class="bg-white shadow-md rounded">
@@ -168,7 +169,10 @@
   <div id="dataEntryPage" class="hidden">
     <div class="flex justify-between mb-4">
       <h1 class="text-2xl font-bold">مدیریت داده‌های ورودی</h1>
-      <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
+      <div>
+        <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
+        <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
+      </div>
     </div>
     <div id="stagesManagement"></div>
   </div>
@@ -177,7 +181,10 @@
   <div id="reportPage" class="hidden">
     <div class="flex justify-between mb-4">
       <h1 class="text-2xl font-bold">گزارش تراکنش‌ها</h1>
-      <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
+      <div>
+        <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
+        <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
+      </div>
     </div>
     <div class="mb-4">
       <label>جستجوی شماره فاکتور/رسید:</label>
@@ -212,9 +219,9 @@
     ];
 
     // شبیه‌سازی دیتابیس با JSON
-    let transactions = [];
-    let logs = [];
-    let stages = [
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let logs = JSON.parse(localStorage.getItem('logs')) || [];
+    let stages = JSON.parse(localStorage.getItem('stages')) || [
       {
         id: 1,
         title: 'نوع تراکنش',
@@ -301,6 +308,28 @@
     let isFormActive = false;
     let currentUser = null;
 
+    // چک کردن لاگین هنگام لود صفحه
+    window.onload = function() {
+      const loginData = JSON.parse(localStorage.getItem('loginData'));
+      if (loginData) {
+        const now = new Date().getTime();
+        const loginTime = loginData.loginTime;
+        const timeDiff = now - loginTime;
+        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
+        if (timeDiff < hours24) {
+          currentUser = loginData.user;
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('mainPage').classList.remove('hidden');
+          if (currentUser.access.includes('dataEntry')) {
+            document.getElementById('dataEntryButton').classList.remove('hidden');
+          }
+          initializeForm(1);
+        } else {
+          localStorage.removeItem('loginData');
+        }
+      }
+    };
+
     // شبیه‌سازی لاگین
     function login() {
       const username = document.getElementById('username').value;
@@ -308,6 +337,11 @@
       const user = users.find(u => u.username === username && u.password === password);
       if (user) {
         currentUser = user;
+        const loginData = {
+          user: user,
+          loginTime: new Date().getTime()
+        };
+        localStorage.setItem('loginData', JSON.stringify(loginData));
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainPage').classList.remove('hidden');
         if (user.access.includes('dataEntry')) {
@@ -317,6 +351,16 @@
       } else {
         alert('نام کاربری یا رمز عبور اشتباه است');
       }
+    }
+
+    // خروج از سیستم
+    function logout() {
+      localStorage.removeItem('loginData');
+      currentUser = null;
+      document.getElementById('mainPage').classList.add('hidden');
+      document.getElementById('dataEntryPage').classList.add('hidden');
+      document.getElementById('reportPage').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
     }
 
     // تبدیل عدد به حروف
@@ -507,6 +551,7 @@
       if (confirm('آیا از حذف این ردیف مطمئن هستید؟')) {
         document.getElementById(`row${rowId}`).remove();
         transactions = transactions.filter(t => t.rowId !== rowId);
+        localStorage.setItem('transactions', JSON.stringify(transactions));
         isFormActive = false;
         document.getElementById('addRowButton').classList.remove('disabled');
         updateSavedTransactions();
@@ -554,6 +599,8 @@
             details: `ردیف ${rowId} ایجاد شد`
           });
         }
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        localStorage.setItem('logs', JSON.stringify(logs));
         isFormActive = false;
         document.getElementById('addRowButton').classList.remove('disabled');
         document.getElementById(`form${rowId}`).classList.add('hidden');
@@ -805,6 +852,7 @@
       const title = document.getElementById(`stageTitle${stageId}`).value;
       if (title) {
         stages.find(s => s.id === parseInt(stageId)).title = title;
+        localStorage.setItem('stages', JSON.stringify(stages));
         updateDataEntry();
         refreshForm();
       }
@@ -822,6 +870,7 @@
             stages.find(s => s.id === 2).options[value] = [];
             stages.find(s => s.id === 4).options[value] = {};
           }
+          localStorage.setItem('stages', JSON.stringify(stages));
           updateDataEntry();
           refreshForm();
           document.getElementById(`optionValue${stageId}`).value = '';
@@ -847,6 +896,7 @@
           delete stage2.options[oldValue];
           delete stage4.options[oldValue];
         }
+        localStorage.setItem('stages', JSON.stringify(stages));
         updateDataEntry();
         refreshForm();
       }
@@ -860,6 +910,7 @@
         delete stages.find(s => s.id === 2).options[value];
         delete stages.find(s => s.id === 4).options[value];
       }
+      localStorage.setItem('stages', JSON.stringify(stages));
       updateDataEntry();
       refreshForm();
     }
@@ -872,6 +923,7 @@
         const stage = stages.find(s => s.id === parseInt(stageId));
         if (!stage.options[type][category].includes(option)) {
           stage.options[type][category].push(option);
+          localStorage.setItem('stages', JSON.stringify(stages));
           updateDataEntry();
           refreshForm();
           document.getElementById(`subOption${stageId}_${type}`).value = '';
@@ -883,6 +935,7 @@
     function removeSubOption(stageId, type, category, option) {
       const stage = stages.find(s => s.id === parseInt(stageId));
       stage.options[type][category] = stage.options[type][category].filter(opt => opt !== option);
+      localStorage.setItem('stages', JSON.stringify(stages));
       updateDataEntry();
       refreshForm();
     }
@@ -891,6 +944,7 @@
     function removeTehaterySubOption(stageId, type, income, cost) {
       const stage = stages.find(s => s.id === parseInt(stageId));
       stage.options[type]['درآمد و هزینه'] = stage.options[type]['درآمد و هزینه'].filter(item => !(item.income === income && item.cost === cost));
+      localStorage.setItem('stages', JSON.stringify(stages));
       updateDataEntry();
       refreshForm();
     }
@@ -902,6 +956,7 @@
         const stage = stages.find(s => s.id === parseInt(stageId));
         if (!stage.sourceAccounts.includes(account)) {
           stage.sourceAccounts.push(account);
+          localStorage.setItem('stages', JSON.stringify(stages));
           updateDataEntry();
           refreshForm();
           document.getElementById(`sourceAccount${stageId}`).value = '';
@@ -913,6 +968,7 @@
     function removeSourceAccount(stageId, account) {
       const stage = stages.find(s => s.id === parseInt(stageId));
       stage.sourceAccounts = stage.sourceAccounts.filter(a => a !== account);
+      localStorage.setItem('stages', JSON.stringify(stages));
       updateDataEntry();
       refreshForm();
     }
@@ -924,6 +980,7 @@
         const stage = stages.find(s => s.id === parseInt(stageId));
         if (!stage.destAccounts.includes(account)) {
           stage.destAccounts.push(account);
+          localStorage.setItem('stages', JSON.stringify(stages));
           updateDataEntry();
           refreshForm();
           document.getElementById(`destAccount${stageId}`).value = '';
@@ -935,6 +992,7 @@
     function removeDestAccount(stageId, account) {
       const stage = stages.find(s => s.id === parseInt(stageId));
       stage.destAccounts = stage.destAccounts.filter(a => a !== account);
+      localStorage.setItem('stages', JSON.stringify(stages));
       updateDataEntry();
       refreshForm();
     }
@@ -1017,15 +1075,4 @@
                 <label id="stage8Label">مرحله 8: توضیحات</label>
                 <textarea id="description${rowCount}" class="border p-2 w-full" rows="4" placeholder="توضیحات (اختیاری)"></textarea>
                 <button onclick="goBack(${rowCount}, 8, 7)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="saveTransaction(${rowCount})" class="bg-green-500 text-white p-2 mt-2">مرحله 9: پایان</button>
-              </div>
-              <button onclick="deleteRow(${rowCount})" class="bg-red-500 text-white p-2 mt-2">حذف ردیف</button>
-            </div>
-          </td>
-        </tr>
-      `;
-      initializeForm(rowCount);
-    }
-  </script>
-</body>
-</html>
+                <button onclick="saveTransaction(${rowCount})" class="bg-green-500 text-white p-2 mt-2
