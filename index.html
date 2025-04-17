@@ -13,6 +13,7 @@
     .hidden { display: none; }
     .disabled { opacity: 0.5; pointer-events: none; }
     .nested { margin-right: 20px; }
+    .error-message { color: red; margin-top: 10px; }
   </style>
 </head>
 <body class="bg-gray-100 p-6">
@@ -27,6 +28,7 @@
       <label class="block mb-1">رمز عبور:</label>
       <input type="password" id="password" class="border p-2 w-full">
     </div>
+    <div id="loginError" class="error-message hidden"></div>
     <button onclick="login()" class="bg-blue-500 text-white p-2 w-full">ورود</button>
   </div>
 
@@ -41,7 +43,7 @@
       </div>
     </div>
     <div class="mb-4">
-      <label>جسسستجو:</label>
+      <label>جستجو:</label>
       <input type="text" id="searchTransactions" class="border p-2 w-full" placeholder="حساب، بابت، یا شماره رسید" oninput="filterTransactions()">
     </div>
     <table id="transactionTable" class="bg-white shadow-md rounded">
@@ -272,7 +274,7 @@
             'درآمد و هزینه': [
               { income: 'فروش به خطیب', cost: 'تسویه با حامد' }
             ]
-          }
+          ]
         }
       },
       {
@@ -311,7 +313,7 @@
     // چک کردن لاگین هنگام لود صفحه
     window.onload = function() {
       const loginData = JSON.parse(localStorage.getItem('loginData'));
-      if (loginData) {
+      if (loginData && loginData.user) {
         const now = new Date().getTime();
         const loginTime = loginData.loginTime;
         const timeDiff = now - loginTime;
@@ -334,6 +336,10 @@
     function login() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.classList.add('hidden');
+      errorDiv.innerText = '';
+
       const user = users.find(u => u.username === username && u.password === password);
       if (user) {
         currentUser = user;
@@ -349,7 +355,8 @@
         }
         initializeForm(1);
       } else {
-        alert('نام کاربری یا رمز عبور اشتباه است');
+        errorDiv.innerText = 'نام کاربری یا رمز عبور اشتباه است';
+        errorDiv.classList.remove('hidden');
       }
     }
 
@@ -1032,47 +1039,4 @@
                 <button onclick="nextStep(${rowCount}, 3, 4)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
               </div>
               <div id="step4_${rowCount}" class="hidden mb-2">
-                <label id="reasonLabel${rowCount}">مرحله 4: بابت</label>
-                <select id="reason${rowCount}" class="border p-2 w-full">
-                  <option value="">انتخاب کنید</option>
-                </select>
-                <button onclick="goBack(${rowCount}, 4, 3)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="nextStep(${rowCount}, 4, 5)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
-              </div>
-              <div id="step5_${rowCount}" class="hidden mb-2">
-                <label id="stage5SourceLabel">مرحله 5: حساب مبدا</label>
-                <select id="sourceAccount${rowCount}" class="border p-2 w-full mb-2">
-                  <option value="">انتخاب کنید</option>
-                </select>
-                <label id="stage5DestLabel">حساب مقصد</label>
-                <select id="destAccount${rowCount}" class="border p-2 w-full">
-                  <option value="">انتخاب کنید</option>
-                </select>
-                <button onclick="goBack(${rowCount}, 5, 4)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="nextStep(${rowCount}, 5, 6)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
-              </div>
-              <div id="step6_${rowCount}" class="hidden mb-2">
-                <label id="stage6Label">مرحله 6: شماره فاکتور/رسید</label>
-                <input type="text" id="invoice${rowCount}" class="border p-2 w-full">
-                <label class="flex items-center mt-2">
-                  <input type="checkbox" id="noInvoice${rowCount}" class="mr-2" onchange="toggleInvoice(${rowCount})">
-                  <span>فاقد شماره فاکتور/رسید</span>
-                </label>
-                <button onclick="goBack(${rowCount}, 6, 5)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="nextStep(${rowCount}, 6, 7)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
-              </div>
-              <div id="step7_${rowCount}" class="hidden mb-2">
-                <label id="stage7Label">مرحله 7: آپلود مدارک</label>
-                <input type="file" id="document${rowCount}" class="border p-2 w-full">
-                <label class="flex items-center mt-2">
-                  <input type="checkbox" id="noDocument${rowCount}" class="mr-2" onchange="toggleDocument(${rowCount})">
-                  <span>فاقد مدارک</span>
-                </label>
-                <button onclick="goBack(${rowCount}, 7, 6)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="nextStep(${rowCount}, 7, 8)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
-              </div>
-              <div id="step8_${rowCount}" class="hidden mb-2">
-                <label id="stage8Label">مرحله 8: توضیحات</label>
-                <textarea id="description${rowCount}" class="border p-2 w-full" rows="4" placeholder="توضیحات (اختیاری)"></textarea>
-                <button onclick="goBack(${rowCount}, 8, 7)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
-                <button onclick="saveTransaction(${rowCount})" class="bg-green-500 text-white p-2 mt-2
+                <label id="reasonLabel${rowCount}">مر
