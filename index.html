@@ -6,13 +6,32 @@
   <title>سیستم حسابداری Tellmart</title>
   <script src="https://cdn.tailwindcss.com">
     // چک کردن لاگین هنگام لود صفحه
+    
+
+    // تابع لاگین
+    ;
+        localStorage.setItem('loginData', JSON.stringify(loginData));
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        if (user.access.includes('dataEntry')) {
+          document.getElementById('dataEntryButton').classList.remove('hidden');
+        }
+        initializeForm(1);
+      } else {
+        errorDiv.innerText = 'نام کاربری یا رمز عبور اشتباه است';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+
+    // چک کردن لاگین هنگام لود صفحه
     window.onload = function() {
       const loginData = JSON.parse(localStorage.getItem('loginData'));
       if (loginData && loginData.user) {
         const now = new Date().getTime();
         const loginTime = loginData.loginTime;
         const timeDiff = now - loginTime;
-        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
+        const hours24 = 24 * 60 * 60 * 1000;
         if (timeDiff < hours24) {
           currentUser = loginData.user;
           document.getElementById('loginPage').classList.add('hidden');
@@ -1215,13 +1234,32 @@ else if (stage.type === 'select' && [2, 4].includes(stage.id)) {
     }
   
     // چک کردن لاگین هنگام لود صفحه
+    
+
+    // تابع لاگین
+    ;
+        localStorage.setItem('loginData', JSON.stringify(loginData));
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        if (user.access.includes('dataEntry')) {
+          document.getElementById('dataEntryButton').classList.remove('hidden');
+        }
+        initializeForm(1);
+      } else {
+        errorDiv.innerText = 'نام کاربری یا رمز عبور اشتباه است';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+
+    // چک کردن لاگین هنگام لود صفحه
     window.onload = function() {
       const loginData = JSON.parse(localStorage.getItem('loginData'));
       if (loginData && loginData.user) {
         const now = new Date().getTime();
         const loginTime = loginData.loginTime;
         const timeDiff = now - loginTime;
-        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
+        const hours24 = 24 * 60 * 60 * 1000;
         if (timeDiff < hours24) {
           currentUser = loginData.user;
           document.getElementById('loginPage').classList.add('hidden');
