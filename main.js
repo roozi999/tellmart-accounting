@@ -1,9 +1,4 @@
-const users = [
-  {username: "roozbeh", password: "roozbeh", access: ["form", "dataEntry", "reports"]},
-  {username: "ramtin", password: "ramtin", access: ["form", "reports"]},
-  {username: "saeed", password: "saeed", access: ["form", "reports"]},
-  {username: "majid", password: "majid", access: ["form", "reports"]}
-];
+const users = [{username: "roozbeh", password: "roozbeh", access: ["form", "dataEntry", "reports"]}];
 let stages = JSON.parse(localStorage.getItem("stages")) || [
   {id: 1, title: "نوع تراکنش", type: "select", options: [
     {value: "واریز", label: "واریز شده به حساب"},
@@ -28,11 +23,9 @@ let stages = JSON.parse(localStorage.getItem("stages")) || [
     "تهاتری": {"درآمد و هزینه": [{income: "فروش به خطیب", cost: "تسویه با حامد"}]}
   }},
   {id: 5, title: "حساب‌ها", type: "double-select", sourceAccounts: [
-    {value: "پاسارگاد شرکت", label: "پاسارگاد شرکت"}, {value: "نسرین", label: "نسرین"},
-    {value: "رامتین", label: "رامتین"}, {value: "تنخواه سعید", label: "تنخواه سعید"}, {value: "خطیب", label: "خطیب"}
+    {value: "پاسارگاد شرکت", label: "پاسارگاد شرکت"}, {value: "نسرین", label: "نسرین"}
   ], destAccounts: [
-    {value: "صادرات یامی", label: "صادرات یامی"}, {value: "تجارت خطیب", label: "تجارت خطیب"},
-    {value: "تات رامتین", label: "تات رامتین"}, {value: "حامد", label: "حامد"}
+    {value: "صادرات یامی", label: "صادرات یامی"}, {value: "تجارت خطیب", label: "تجارت خطیب"}
   ]},
   {id: 6, title: "شماره فاکتور/رسید", type: "text-checkbox", options: [
     {value: "no-invoice", label: "فاقد شماره فاکتور/رسید"}
@@ -48,24 +41,6 @@ let logs = JSON.parse(localStorage.getItem("logs")) || [];
 let isFormActive = false;
 let currentUser = null;
 
-window.onload = function() {
-  const loginData = JSON.parse(localStorage.getItem("loginData"));
-  if (loginData && loginData.user) {
-    const now = new Date().getTime();
-    const loginTime = loginData.loginTime;
-    const timeDiff = now - loginTime;
-    const hours24 = 24 * 60 * 60 * 1000;
-    if (timeDiff < hours24) {
-      currentUser = loginData.user;
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("mainPage").classList.remove("hidden");
-      initializeForm(1);
-    } else {
-      localStorage.removeItem("loginData");
-    }
-  }
-};
-
 function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -75,8 +50,7 @@ function login() {
   const user = users.find(u => u.username === username && u.password === password);
   if (user) {
     currentUser = user;
-    const loginData = {user, loginTime: new Date().getTime()};
-    localStorage.setItem("loginData", JSON.stringify(loginData));
+    localStorage.setItem("loginData", JSON.stringify({user, loginTime: new Date().getTime()}));
     document.getElementById("loginPage").classList.add("hidden");
     document.getElementById("mainPage").classList.remove("hidden");
     initializeForm(1);
@@ -383,13 +357,12 @@ function updateDestAccount(stageId, oldValue) {
 }
 
 function removeDestAccount(stageId, value) {
-  const stage = stages.find(s => s  {
-    const stage = stages.find(s => s.id === parseInt(stageId));
-    stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
-    localStorage.setItem("stages", JSON.stringify(stages));
-    updateStageOptions(stageId);
-  }
+  const stage = stages.find(s => s.id === parseInt(stageId));
+  stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
+  localStorage.setItem("stages", JSON.stringify(stages));
+  updateStageOptions(stageId);
 }
+
 function numberToWords(num) {
   if (num === 0) return 'صفر';
   const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
@@ -464,7 +437,6 @@ function initializeForm(rowId) {
   });
   updateAccountOptions(rowId);
 }
-
 function startForm(rowId) {
   if (isFormActive) {
     alert('لطفاً فرم فعلی را ذخیره کنید');
@@ -575,11 +547,254 @@ function deleteRow(rowId) {
     updateReports();
   }
 }
-
 function addRow() {
   const rowCount = transactions.length + 1;
   const tbody = document.getElementById("transactionBody");
   const newRow = document.createElement("tr");
   newRow.id = `row${rowCount}`;
   newRow.innerHTML = `
-    <td><button onclick="startForm(${rowCount})" class="bg-green-500 text-white p-2">شروع</button></td
+    <td><button onclick="startForm(${rowCount})" class="bg-green-500 text-white p-2">شروع</button></td>
+    <td>
+      <div id="form${rowCount}" class="p-2 hidden">
+        <div id="step1_${rowCount}" class="mb-2">
+          <label id="stage1Label">مرحله 1: نوع تراکنش</label>
+          <select id="type${rowCount}" onchange="showTypeOptions(${rowCount})" class="border p-2 w-full">
+            <option value="">انتخاب کنید</option>
+          </select>
+          <button onclick="nextStep(${rowCount}, 1, 2)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step2_${rowCount}" class="hidden mb-2">
+          <label id="stage2Label">مرحله 2: دسته‌بندی</label>
+          <select id="category${rowCount}" onchange="updateReasonOptions(${rowCount})" class="border p-2 w-full">
+            <option value="">انتخاب کنید</option>
+          </select>
+          <button onclick="goBack(${rowCount}, 2, 1)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 2, 3)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step3_${rowCount}" class="hidden mb-2">
+          <label id="stage3Label">مرحله 3: مبلغ (ریال)</label>
+          <input type="text" id="amount${rowCount}" oninput="formatAmount(${rowCount})" class="border p-2 w-full" placeholder="مثال: 200,000">
+          <p id="amountText${rowCount}" class="text-sm text-gray-600 mt-1"></p>
+          <label class="flex items-center mt-2">
+            <input type="checkbox" id="confirmAmount${rowCount}" class="mr-2">
+            <span>مبلغ واردشده درست است</span>
+          </label>
+          <button onclick="goBack(${rowCount}, 3, 2)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 3, 4)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step4_${rowCount}" class="hidden mb-2">
+          <label id="stage4Label">مرحله 4: بابت</label>
+          <select id="reason${rowCount}" class="border p-2 w-full">
+            <option value="">انتخاب کنید</option>
+          </select>
+          <button onclick="goBack(${rowCount}, 4, 3)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 4, 5)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step5_${rowCount}" class="hidden mb-2">
+          <label id="stage5SourceLabel">مرحله 5: حساب مبدا</label>
+          <select id="sourceAccount${rowCount}" class="border p-2 w-full mb-2">
+            <option value="">انتخاب کنید</option>
+          </select>
+          <label id="stage5DestLabel">حساب مقصد</label>
+          <select id="destAccount${rowCount}" class="border p-2 w-full">
+            <option value="">انتخاب کنید</option>
+          </select>
+          <button onclick="goBack(${rowCount}, 5, 4)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 5, 6)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step6_${rowCount}" class="hidden mb-2">
+          <label id="stage6Label">مرحله 6: شماره فاکتور/رسید</label>
+          <input type="text" id="invoice${rowCount}" class="border p-2 w-full">
+          <label class="flex items-center mt-2">
+            <input type="checkbox" id="noInvoice${rowCount}" class="mr-2" onchange="toggleInvoice(${rowCount})">
+            <span>فاقد شماره فاکتور/رسید</span>
+          </label>
+          <button onclick="goBack(${rowCount}, 6, 5)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 6, 7)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step7_${rowCount}" class="hidden mb-2">
+          <label id="stage7Label">مرحله 7: آپلود مدارک</label>
+          <input type="file" id="document${rowCount}" class="border p-2 w-full">
+          <label class="flex items-center mt-2">
+            <input type="checkbox" id="noDocument${rowCount}" class="mr-2" onchange="toggleDocument(${rowCount})">
+            <span>فاقد مدارک</span>
+          </label>
+          <button onclick="goBack(${rowCount}, 7, 6)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="nextStep(${rowCount}, 7, 8)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+        </div>
+        <div id="step8_${rowCount}" class="hidden mb-2">
+          <label id="stage8Label">مرحله 8: توضیحات</label>
+          <textarea id="description${rowCount}" class="border p-2 w-full" rows="4" placeholder="توضیحات (اختیاری)"></textarea>
+          <button onclick="goBack(${rowCount}, 8, 7)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+          <button onclick="saveTransaction(${rowCount})" class="bg-green-500 text-white p-2 mt-2">مرحله 9: پایان</button>
+        </div>
+        <button onclick="deleteRow(${rowCount})" class="bg-red-500 text-white p-2 mt-2">حذف ردیف</button>
+      </div>
+    </td>
+  `;
+  tbody.appendChild(newRow);
+  initializeForm(rowCount);
+}
+function saveTransaction(rowId, isEdit = false) {
+  const type = document.getElementById(`type${rowId}`).value;
+  const description = document.getElementById(`description${rowId}`).value;
+  const transaction = {
+    rowId,
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    type,
+    category: document.getElementById(`category${rowId}`).value,
+    amount: document.getElementById(`amount${rowId}`).value.replace(/,/g, ''),
+    reason: document.getElementById(`reason${rowId}`).value,
+    sourceAccount: document.getElementById(`sourceAccount${rowId}`).value,
+    destAccount: document.getElementById(`destAccount${rowId}`).value,
+    invoice: document.getElementById(`noInvoice${rowId}`).checked ? '' : document.getElementById(`invoice${rowId}`).value,
+    document: '',
+    description
+  };
+  const documentFile = document.getElementById(`document${rowId}`).files[0];
+  const save = () => {
+    if (isEdit) {
+      const index = transactions.findIndex(t => t.rowId === rowId);
+      transactions[index] = transaction;
+      logs.push({
+        rowId,
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'ویرایش',
+        details: `ردیف ${rowId} ویرایش شد`
+      });
+    } else {
+      transactions.push(transaction);
+      logs.push({
+        rowId,
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'ایجاد',
+        details: `ردیف ${rowId} ایجاد شد`
+      });
+    }
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+    localStorage.setItem("logs", JSON.stringify(logs));
+    isFormActive = false;
+    document.getElementById('addRowButton').classList.remove('disabled');
+    document.getElementById(`form${rowId}`).classList.add('hidden');
+    updateSavedTransactions();
+    updateReports();
+    alert('تراکنش با موفقیت ذخیره شد');
+  };
+  if (documentFile && !document.getElementById(`noDocument${rowId}`).checked) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      transaction.document = e.target.result;
+      save();
+    };
+    reader.readAsDataURL(documentFile);
+  } else {
+    save();
+  }
+}
+
+function editTransaction(rowId) {
+  if (isFormActive) {
+    alert('لطفاً فرم فعلی را ذخیره کنید');
+    return;
+  }
+  isFormActive = true;
+  document.getElementById('addRowButton').classList.add('disabled');
+  const transaction = transactions.find(t => t.rowId === rowId);
+  const formId = rowId;
+  document.getElementById(`form${formId}`).classList.remove('hidden');
+  document.getElementById(`type${formId}`).value = transaction.type;
+  showTypeOptions(formId);
+  document.getElementById(`category${formId}`).value = transaction.category;
+  updateReasonOptions(formId);
+  document.getElementById(`reason${formId}`).value = transaction.reason;
+  document.getElementById(`amount${formId}`).value = Number(transaction.amount).toLocaleString('en-US');
+  formatAmount(formId);
+  document.getElementById(`sourceAccount${formId}`).value = transaction.sourceAccount;
+  document.getElementById(`destAccount${formId}`).value = transaction.destAccount;
+  document.getElementById(`invoice${formId}`).value = transaction.invoice;
+  document.getElementById(`noInvoice${formId}`).checked = !transaction.invoice;
+  toggleInvoice(formId);
+  document.getElementById(`noDocument${formId}`).checked = !transaction.document;
+  toggleDocument(formId);
+  document.getElementById(`description${formId}`).value = transaction.description;
+  document.getElementById(`step1_${formId}`).classList.remove('hidden');
+}
+
+function updateSavedTransactions() {
+  const savedBody = document.getElementById('savedTransactionsBody');
+  savedBody.innerHTML = '';
+  const search = document.getElementById('searchTransactions').value.toLowerCase();
+  transactions.filter(t => {
+    return !search ||
+      t.sourceAccount.toLowerCase().includes(search) ||
+      t.destAccount.toLowerCase().includes(search) ||
+      t.reason.toLowerCase().includes(search) ||
+      t.invoice.toLowerCase().includes(search);
+  }).forEach(t => {
+    const row = savedBody.insertRow();
+    row.innerHTML = `
+      <td>${t.rowId}</td>
+      <td>${stages.find(s => s.id === 1).options.find(o => o.value === t.type)?.label || t.type}</td>
+      <td>${t.category}</td>
+      <td>${(t.amount / 10).toLocaleString('en-US')}</td>
+      <td>${t.reason}</td>
+      <td>${t.sourceAccount}</td>
+      <td>${t.destAccount}</td>
+      <td>${t.invoice || 'فاقد'}</td>
+      <td>${t.description || 'بدون توضیح'}</td>
+      <td><button onclick="editTransaction(${t.rowId})" class="bg-yellow-500 text-white p-1">ویرایش</button></td>
+    `;
+  });
+}
+
+function filterTransactions() {
+  updateSavedTransactions();
+}
+
+function showReports() {
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('dataEntryPage').classList.add('hidden');
+  document.getElementById('reportPage').classList.remove('hidden');
+  updateReports();
+}
+
+function showDataEntry() {
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('reportPage').classList.add('hidden');
+  document.getElementById('dataEntryPage').classList.remove('hidden');
+  initializeStageSelector();
+}
+
+function showMainPage() {
+  document.getElementById('reportPage').classList.add('hidden');
+  document.getElementById('dataEntryPage').classList.add('hidden');
+  document.getElementById('mainPage').classList.remove('hidden');
+}
+
+function updateReports() {
+  const reportBody = document.getElementById('reportBody');
+  reportBody.innerHTML = '';
+  const searchInvoice = document.getElementById('searchInvoice').value.toLowerCase();
+  transactions.filter(t => !searchInvoice || t.invoice.toLowerCase().includes(searchInvoice)).forEach(t => {
+    const row = reportBody.insertRow();
+    row.innerHTML = `
+      <td>${t.username}</td>
+      <td>${new Date(t.date).toLocaleDateString('fa-IR')}</td>
+      <td>${stages.find(s => s.id === 1).options.find(o => o.value === t.type)?.label || t.type}</td>
+      <td>${t.category}</td>
+      <td>${(t.amount / 10).toLocaleString('en-US')}</td>
+      <td>${t.reason}</td>
+      <td>${t.sourceAccount}</td>
+      <td>${t.destAccount}</td>
+      <td>${t.invoice || 'فاقد'}</td>
+      <td>${t.description || 'بدون توضیح'}</td>
+    `;
+  });
+}
+
+function filterReports() {
+  updateReports();
+}
