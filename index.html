@@ -4,7 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>سیستم حسابداری Tellmart</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">
+    // چک کردن لاگین هنگام لود صفحه
+    window.onload = function() {
+      const loginData = JSON.parse(localStorage.getItem('loginData'));
+      if (loginData && loginData.user) {
+        const now = new Date().getTime();
+        const loginTime = loginData.loginTime;
+        const timeDiff = now - loginTime;
+        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
+        if (timeDiff < hours24) {
+          currentUser = loginData.user;
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('mainPage').classList.remove('hidden');
+          if (currentUser.access.includes('dataEntry')) {
+            document.getElementById('dataEntryButton').classList.remove('hidden');
+          }
+          initializeForm(1);
+          return;
+        }
+      }
+      localStorage.removeItem('loginData');
+    };
+
+    // تابع لاگین
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.classList.add('hidden');
+      errorDiv.innerText = '';
+
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) {
+        currentUser = user;
+        const loginData = {
+          user: user,
+          loginTime: new Date().getTime()
+        };
+        localStorage.setItem('loginData', JSON.stringify(loginData));
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        if (user.access.includes('dataEntry')) {
+          document.getElementById('dataEntryButton').classList.remove('hidden');
+        }
+        initializeForm(1);
+      } else {
+        errorDiv.innerText = 'نام کاربری یا رمز عبور اشتباه است';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+</script>
   <style>
     body { direction: rtl; font-family: Arial, sans-serif; }
     table { border-collapse: collapse; width: 100%; }
@@ -311,42 +362,10 @@
     let currentUser = null;
 
     // چک کردن لاگین هنگام لود صفحه
-    window.onload = function() {
-      const loginData = JSON.parse(localStorage.getItem('loginData'));
-      if (loginData && loginData.user) {
-        const now = new Date().getTime();
-        const loginTime = loginData.loginTime;
-        const timeDiff = now - loginTime;
-        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
-        if (timeDiff < hours24) {
-          currentUser = loginData.user;
-          document.getElementById('loginPage').classList.add('hidden');
-          document.getElementById('mainPage').classList.remove('hidden');
-          if (currentUser.access.includes('dataEntry')) {
-            document.getElementById('dataEntryButton').classList.remove('hidden');
-          }
-          initializeForm(1);
-        } else {
-          localStorage.removeItem('loginData');
-        }
-      }
-    };
+    
 
     // شبیه‌سازی لاگین
-    function login() {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const errorDiv = document.getElementById('loginError');
-      errorDiv.classList.add('hidden');
-      errorDiv.innerText = '';
-
-      const user = users.find(u => u.username === username && u.password === password);
-      if (user) {
-        currentUser = user;
-        const loginData = {
-          user: user,
-          loginTime: new Date().getTime()
-        };
+    ;
         localStorage.setItem('loginData', JSON.stringify(loginData));
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mainPage').classList.remove('hidden');
@@ -1194,6 +1213,57 @@ else if (stage.type === 'select' && [2, 4].includes(stage.id)) {
       }
       refreshForm();
     }
-  </script>
+  
+    // چک کردن لاگین هنگام لود صفحه
+    window.onload = function() {
+      const loginData = JSON.parse(localStorage.getItem('loginData'));
+      if (loginData && loginData.user) {
+        const now = new Date().getTime();
+        const loginTime = loginData.loginTime;
+        const timeDiff = now - loginTime;
+        const hours24 = 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
+        if (timeDiff < hours24) {
+          currentUser = loginData.user;
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('mainPage').classList.remove('hidden');
+          if (currentUser.access.includes('dataEntry')) {
+            document.getElementById('dataEntryButton').classList.remove('hidden');
+          }
+          initializeForm(1);
+          return;
+        }
+      }
+      localStorage.removeItem('loginData');
+    };
+
+    // تابع لاگین
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorDiv = document.getElementById('loginError');
+      errorDiv.classList.add('hidden');
+      errorDiv.innerText = '';
+
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) {
+        currentUser = user;
+        const loginData = {
+          user: user,
+          loginTime: new Date().getTime()
+        };
+        localStorage.setItem('loginData', JSON.stringify(loginData));
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        if (user.access.includes('dataEntry')) {
+          document.getElementById('dataEntryButton').classList.remove('hidden');
+        }
+        initializeForm(1);
+      } else {
+        errorDiv.innerText = 'نام کاربری یا رمز عبور اشتباه است';
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+</script>
 </body>
 </html>
