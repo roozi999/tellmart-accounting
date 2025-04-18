@@ -7,7 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { direction: rtl; font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+    th { background-color: #f2f2f2; }
     .hidden { display: none; }
+    .disabled { opacity: 0.5; pointer-events: none; }
     .error-message { color: red; margin-top: 10px; }
     .nested { margin-right: 20px; }
   </style>
@@ -27,11 +31,146 @@
     <div id="loginError" class="error-message hidden"></div>
     <button onclick="login()" class="bg-blue-500 text-white p-2 w-full">ورود</button>
   </div>
+  <!-- صفحه فرم تراکنش‌ها -->
+  <div id="mainPage" class="hidden">
+    <div class="flex justify-between mb-4">
+      <h1 class="text-2xl font-bold">ثبت تراکنش‌های Tellmart</h1>
+      <div>
+        <button onclick="showReports()" class="bg-purple-500 text-white p-2">مشاهده گزارش‌ها</button>
+        <button onclick="showDataEntry()" class="bg-yellow-500 text-white p-2">مدیریت داده‌ها</button>
+        <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label>جستجو:</label>
+      <input type="text" id="searchTransactions" class="border p-2 w-full" placeholder="حساب، بابت، یا شماره رسید" oninput="filterTransactions()">
+    </div>
+    <table id="transactionTable" class="bg-white shadow-md rounded">
+      <thead>
+        <tr>
+          <th>شروع</th>
+          <th>جزئیات</th>
+        </tr>
+      </thead>
+      <tbody id="transactionBody">
+        <tr id="row1">
+          <td><button onclick="startForm(1)" class="bg-green-500 text-white p-2">شروع</button></td>
+          <td>
+            <div id="form1" class="p-2 hidden">
+              <!-- مرحله 1: نوع تراکنش -->
+              <div id="step1_1" class="mb-2">
+                <label id="stage1Label">مرحله 1: نوع تراکنش</label>
+                <select id="type1" onchange="showTypeOptions(1)" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="nextStep(1, 1, 2)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 2: دسته‌بندی -->
+              <div id="step2_1" class="hidden mb-2">
+                <label id="stage2Label">مرحله 2: دسته‌بندی</label>
+                <select id="category1" onchange="updateReasonOptions(1)" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(1, 2, 1)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 2, 3)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 3: مبلغ -->
+              <div id="step3_1" class="hidden mb-2">
+                <label id="stage3Label">مرحله 3: مبلغ (ریال)</label>
+                <input type="text" id="amount1" oninput="formatAmount(1)" class="border p-2 w-full" placeholder="مثال: 200,000">
+                <p id="amountText1" class="text-sm text-gray-600 mt-1"></p>
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="confirmAmount1" class="mr-2">
+                  <span>مبلغ واردشده درست است</span>
+                </label>
+                <button onclick="goBack(1, 3, 2)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 3, 4)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 4: بابت -->
+              <div id="step4_1" class="hidden mb-2">
+                <label id="stage4Label">مرحله 4: بابت</label>
+                <select id="reason1" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(1, 4, 3)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 4, 5)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 5: حساب مبدا و مقصد -->
+              <div id="step5_1" class="hidden mb-2">
+                <label id="stage5SourceLabel">مرحله 5: حساب مبدا</label>
+                <select id="sourceAccount1" class="border p-2 w-full mb-2">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <label id="stage5DestLabel">حساب مقصد</label>
+                <select id="destAccount1" class="border p-2 w-full">
+                  <option value="">انتخاب کنید</option>
+                </select>
+                <button onclick="goBack(1, 5, 4)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 5, 6)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 6: شماره فاکتور/رسید -->
+              <div id="step6_1" class="hidden mb-2">
+                <label id="stage6Label">مرحله 6: شماره فاکتور/رسید</label>
+                <input type="text" id="invoice1" class="border p-2 w-full">
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="noInvoice1" class="mr-2" onchange="toggleInvoice(1)">
+                  <span>فاقد شماره فاکتور/رسید</span>
+                </label>
+                <button onclick="goBack(1, 6, 5)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 6, 7)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 7: آپلود مدارک -->
+              <div id="step7_1" class="hidden mb-2">
+                <label id="stage7Label">مرحله 7: آپلود مدارک</label>
+                <input type="file" id="document1" class="border p-2 w-full">
+                <label class="flex items-center mt-2">
+                  <input type="checkbox" id="noDocument1" class="mr-2" onchange="toggleDocument(1)">
+                  <span>فاقد مدارک</span>
+                </label>
+                <button onclick="goBack(1, 7, 6)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="nextStep(1, 7, 8)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+              </div>
+              <!-- مرحله 8: توضیحات -->
+              <div id="step8_1" class="hidden mb-2">
+                <label id="stage8Label">مرحله 8: توضیحات</label>
+                <textarea id="description1" class="border p-2 w-full" rows="4" placeholder="توضیحات (اختیاری)"></textarea>
+                <button onclick="goBack(1, 8, 7)" class="bg-gray-500 text-white p-2 mt-2">قبلی</button>
+                <button onclick="saveTransaction(1)" class="bg-green-500 text-white p-2 mt-2">مرحله 9: پایان</button>
+              </div>
+              <button onclick="deleteRow(1)" class="bg-red-500 text-white p-2 mt-2">حذف ردیف</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button id="addRowButton" onclick="addRow()" class="bg-green-500 text-white p-2 mt-4 disabled">اضافه کردن ردیف جدید</button>
+    <div class="mt-4">
+      <h2 class="text-xl font-bold mb-2">تراکنش‌های ذخیره‌شده</h2>
+      <table id="savedTransactions" class="bg-white shadow-md rounded">
+        <thead>
+          <tr>
+            <th>ردیف</th>
+            <th>نوع</th>
+            <th>دسته‌بندی</th>
+            <th>مبلغ (تومان)</th>
+            <th>بابت</th>
+            <th>حساب مبدا</th>
+            <th>حساب مقصد</th>
+            <th>فاکتور/رسید</th>
+            <th>توضیحات</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody id="savedTransactionsBody"></tbody>
+      </table>
+    </div>
+  </div>
   <!-- صفحه مدیریت داده‌ها -->
   <div id="dataEntryPage" class="hidden">
     <div class="flex justify-between mb-4">
       <h1 class="text-2xl font-bold">مدیریت داده‌های ورودی</h1>
       <div>
+        <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
         <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
       </div>
     </div>
@@ -42,6 +181,37 @@
       </select>
       <div id="stageManagementContent" class="hidden"></div>
     </div>
+  </div>
+  <!-- صفحه گزارش -->
+  <div id="reportPage" class="hidden">
+    <div class="flex justify-between mb-4">
+      <h1 class="text-2xl font-bold">گزارش تراکنش‌ها</h1>
+      <div>
+        <button onclick="showMainPage()" class="bg-blue-500 text-white p-2">بازگشت به فرم</button>
+        <button onclick="logout()" class="bg-red-500 text-white p-2">خروج</button>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label>جستجوی شماره فاکتور/رسید:</label>
+      <input type="text" id="searchInvoice" class="border p-2 w-full" oninput="filterReports()">
+    </div>
+    <table id="reportTable" class="bg-white shadow-md rounded">
+      <thead>
+        <tr>
+          <th>کاربر</th>
+          <th>تاریخ</th>
+          <th>نوع</th>
+          <th>دسته‌بندی</th>
+          <th>مبلغ (تومان)</th>
+          <th>بابت</th>
+          <th>حساب مبدا</th>
+          <th>حساب مقصد</th>
+          <th>فاکتور/رسید</th>
+          <th>توضیحات</th>
+        </tr>
+      </thead>
+      <tbody id="reportBody"></tbody>
+    </table>
   </div>
   <script src="main.js"></script>
 </body>

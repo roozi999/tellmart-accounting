@@ -1,4 +1,9 @@
-const users = [{username: "roozbeh", password: "roozbeh", access: ["dataEntry"]}];
+const users = [
+  {username: "roozbeh", password: "roozbeh", access: ["form", "dataEntry", "reports"]},
+  {username: "ramtin", password: "ramtin", access: ["form", "reports"]},
+  {username: "saeed", password: "saeed", access: ["form", "reports"]},
+  {username: "majid", password: "majid", access: ["form", "reports"]}
+];
 let stages = JSON.parse(localStorage.getItem("stages")) || [
   {id: 1, title: "نوع تراکنش", type: "select", options: [
     {value: "واریز", label: "واریز شده به حساب"},
@@ -23,9 +28,11 @@ let stages = JSON.parse(localStorage.getItem("stages")) || [
     "تهاتری": {"درآمد و هزینه": [{income: "فروش به خطیب", cost: "تسویه با حامد"}]}
   }},
   {id: 5, title: "حساب‌ها", type: "double-select", sourceAccounts: [
-    {value: "پاسارگاد شرکت", label: "پاسارگاد شرکت"}, {value: "نسرین", label: "نسرین"}
+    {value: "پاسارگاد شرکت", label: "پاسارگاد شرکت"}, {value: "نسرین", label: "نسرین"},
+    {value: "رامتین", label: "رامتین"}, {value: "تنخواه سعید", label: "تنخواه سعید"}, {value: "خطیب", label: "خطیب"}
   ], destAccounts: [
-    {value: "صادرات یامی", label: "صادرات یامی"}, {value: "تجارت خطیب", label: "تجارت خطیب"}
+    {value: "صادرات یامی", label: "صادرات یامی"}, {value: "تجارت خطیب", label: "تجارت خطیب"},
+    {value: "تات رامتین", label: "تات رامتین"}, {value: "حامد", label: "حامد"}
   ]},
   {id: 6, title: "شماره فاکتور/رسید", type: "text-checkbox", options: [
     {value: "no-invoice", label: "فاقد شماره فاکتور/رسید"}
@@ -36,7 +43,28 @@ let stages = JSON.parse(localStorage.getItem("stages")) || [
   {id: 8, title: "توضیحات", type: "textarea"},
   {id: 9, title: "پایان", type: "button"}
 ];
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+let logs = JSON.parse(localStorage.getItem("logs")) || [];
+let isFormActive = false;
 let currentUser = null;
+
+window.onload = function() {
+  const loginData = JSON.parse(localStorage.getItem("loginData"));
+  if (loginData && loginData.user) {
+    const now = new Date().getTime();
+    const loginTime = loginData.loginTime;
+    const timeDiff = now - loginTime;
+    const hours24 = 24 * 60 * 60 * 1000;
+    if (timeDiff < hours24) {
+      currentUser = loginData.user;
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("mainPage").classList.remove("hidden");
+      initializeForm(1);
+    } else {
+      localStorage.removeItem("loginData");
+    }
+  }
+};
 
 function login() {
   const username = document.getElementById("username").value.trim();
@@ -47,10 +75,11 @@ function login() {
   const user = users.find(u => u.username === username && u.password === password);
   if (user) {
     currentUser = user;
-    localStorage.setItem("loginData", JSON.stringify({user, loginTime: new Date().getTime()}));
+    const loginData = {user, loginTime: new Date().getTime()};
+    localStorage.setItem("loginData", JSON.stringify(loginData));
     document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("dataEntryPage").classList.remove("hidden");
-    initializeStageSelector();
+    document.getElementById("mainPage").classList.remove("hidden");
+    initializeForm(1);
   } else {
     errorDiv.innerText = "نام کاربری یا رمز عبور اشتباه است";
     errorDiv.classList.remove("hidden");
@@ -60,10 +89,11 @@ function login() {
 function logout() {
   localStorage.removeItem("loginData");
   currentUser = null;
+  document.getElementById("mainPage").classList.add("hidden");
   document.getElementById("dataEntryPage").classList.add("hidden");
+  document.getElementById("reportPage").classList.add("hidden");
   document.getElementById("loginPage").classList.remove("hidden");
 }
-
 function initializeStageSelector() {
   const stageSelector = document.getElementById("stageSelector");
   stageSelector.innerHTML = '<option value="">مرحله را انتخاب کنید</option>';
@@ -149,7 +179,6 @@ function updateStageOptions(stageId) {
     });
   }
 }
-
 function updateStageTitle(stageId) {
   const title = document.getElementById(`stageTitle${stageId}`).value;
   if (title) {
@@ -290,7 +319,6 @@ function removeTehaterySubOption(stageId, type, category, income, cost) {
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
-
 function addSourceAccount(stageId) {
   const value = document.getElementById(`sourceAccountValue${stageId}`).value;
   const label = document.getElementById(`sourceAccountLabel${stageId}`).value;
@@ -355,8 +383,203 @@ function updateDestAccount(stageId, oldValue) {
 }
 
 function removeDestAccount(stageId, value) {
-  const stage = stages.find(s => s.id === parseInt(stageId));
-  stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
-  localStorage.setItem("stages", JSON.stringify(stages));
-  updateStageOptions(stageId);
+  const stage = stages.find(s => s  {
+    const stage = stages.find(s => s.id === parseInt(stageId));
+    stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
+    localStorage.setItem("stages", JSON.stringify(stages));
+    updateStageOptions(stageId);
+  }
 }
+function numberToWords(num) {
+  if (num === 0) return 'صفر';
+  const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+  const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+  const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+  const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+  const thousands = ['', 'هزار', 'میلیون', 'میلیارد'];
+
+  function convertChunk(n) {
+    let result = '';
+    if (n >= 100) {
+      result += hundreds[Math.floor(n / 100)] + ' ';
+      n %= 100;
+    }
+    if (n >= 20) {
+      result += tens[Math.floor(n / 10)] + ' ';
+      n %= 10;
+    } else if (n >= 10) {
+      result += teens[n - 10] + ' ';
+      return result.trim();
+    }
+    if (n > 0) {
+      result += units[n] + ' ';
+    }
+    return result.trim();
+  }
+
+  let result = '';
+  let chunkIndex = 0;
+  while (num > 0) {
+    let chunk = num % 1000;
+    if (chunk > 0) {
+      result = convertChunk(chunk) + ' ' + thousands[chunkIndex] + ' ' + result;
+    }
+    num = Math.floor(num / 1000);
+    chunkIndex++;
+  }
+  return result.trim();
+}
+
+function formatAmount(rowId) {
+  let input = document.getElementById(`amount${rowId}`);
+  let value = input.value.replace(/,/g, '');
+  if (value && !isNaN(value)) {
+    input.value = Number(value).toLocaleString('en-US');
+    let toman = Math.floor(value / 10);
+    document.getElementById(`amountText${rowId}`).innerText = `${numberToWords(toman)} تومان`;
+  } else {
+    document.getElementById(`amountText${rowId}`).innerText = '';
+  }
+}
+
+function initializeForm(rowId) {
+  const typeSelect = document.getElementById(`type${rowId}`);
+  typeSelect.innerHTML = '<option value="">انتخاب کنید</option>';
+  stages.find(s => s.id === 1).options.forEach(opt => {
+    typeSelect.innerHTML += `<option value="${opt.value}">${opt.label}</option>`;
+  });
+  stages.forEach(stage => {
+    if (stage.id <= 8) {
+      const labelElement = document.getElementById(`stage${stage.id}Label`);
+      if (labelElement) {
+        labelElement.innerText = `مرحله ${stage.id}: ${stage.title}`;
+      }
+    }
+    if (stage.id === 5) {
+      const sourceLabel = document.getElementById(`stage5SourceLabel`);
+      const destLabel = document.getElementById(`stage5DestLabel`);
+      if (sourceLabel) sourceLabel.innerText = `مرحله 5: حساب مبدا`;
+      if (destLabel) destLabel.innerText = `حساب مقصد`;
+    }
+  });
+  updateAccountOptions(rowId);
+}
+
+function startForm(rowId) {
+  if (isFormActive) {
+    alert('لطفاً فرم فعلی را ذخیره کنید');
+    return;
+  }
+  isFormActive = true;
+  document.getElementById(`form${rowId}`).classList.remove('hidden');
+  document.getElementById('addRowButton').classList.add('disabled');
+}
+
+function showTypeOptions(rowId) {
+  const type = document.getElementById(`type${rowId}`).value;
+  const categorySelect = document.getElementById(`category${rowId}`);
+  categorySelect.innerHTML = '<option value="">انتخاب کنید</option>';
+  const stage2 = stages.find(s => s.id === 2);
+  if (type && stage2.options[type]) {
+    stage2.options[type].forEach(opt => {
+      categorySelect.innerHTML += `<option value="${opt.value}">${opt.label}</option>`;
+    });
+  }
+  updateReasonOptions(rowId);
+}
+
+function updateReasonOptions(rowId) {
+  const type = document.getElementById(`type${rowId}`).value;
+  const category = document.getElementById(`category${rowId}`).value;
+  const reasonSelect = document.getElementById(`reason${rowId}`);
+  reasonSelect.innerHTML = '<option value="">انتخاب کنید</option>';
+  const stage4 = stages.find(s => s.id === 4);
+  if (type && category && stage4.options[type] && stage4.options[type][category]) {
+    if (type === 'تهاتری') {
+      stage4.options[type][category].forEach(item => {
+        reasonSelect.innerHTML += `<option value="${item.income}">${item.income}</option>`;
+      });
+    } else {
+      stage4.options[type][category].forEach(opt => {
+        reasonSelect.innerHTML += `<option value="${opt.value}">${opt.label}</option>`;
+      });
+    }
+  }
+}
+
+function updateAccountOptions(rowId) {
+  const sourceAccountSelect = document.getElementById(`sourceAccount${rowId}`);
+  const destAccountSelect = document.getElementById(`destAccount${rowId}`);
+  sourceAccountSelect.innerHTML = '<option value="">انتخاب کنید</option>';
+  destAccountSelect.innerHTML = '<option value="">انتخاب کنید</option>';
+  const stage5 = stages.find(s => s.id === 5);
+  stage5.sourceAccounts.forEach(account => {
+    sourceAccountSelect.innerHTML += `<option value="${account.value}">${account.label}</option>`;
+  });
+  stage5.destAccounts.forEach(account => {
+    destAccountSelect.innerHTML += `<option value="${account.value}">${account.label}</option>`;
+  });
+}
+
+function toggleInvoice(rowId) {
+  const noInvoice = document.getElementById(`noInvoice${rowId}`).checked;
+  document.getElementById(`invoice${rowId}`).disabled = noInvoice;
+  if (noInvoice) document.getElementById(`invoice${rowId}`).value = '';
+}
+
+function toggleDocument(rowId) {
+  const noDocument = document.getElementById(`noDocument${rowId}`).checked;
+  document.getElementById(`document${rowId}`).disabled = noDocument;
+  if (noDocument) document.getElementById(`document${rowId}`).value = '';
+}
+
+function nextStep(rowId, currentStep, nextStep) {
+  let valid = false;
+  const type = document.getElementById(`type${rowId}`).value;
+  if (currentStep === 1) {
+    valid = type !== '';
+  } else if (currentStep === 2) {
+    valid = document.getElementById(`category${rowId}`).value !== '';
+  } else if (currentStep === 3) {
+    valid = document.getElementById(`amount${rowId}`).value !== '' && document.getElementById(`confirmAmount${rowId}`).checked;
+  } else if (currentStep === 4) {
+    valid = document.getElementById(`reason${rowId}`).value !== '';
+  } else if (currentStep === 5) {
+    valid = document.getElementById(`sourceAccount${rowId}`).value !== '' && document.getElementById(`destAccount${rowId}`).value !== '';
+  } else if (currentStep === 6) {
+    valid = document.getElementById(`noInvoice${rowId}`).checked || document.getElementById(`invoice${rowId}`).value !== '';
+  } else if (currentStep === 7) {
+    valid = document.getElementById(`noDocument${rowId}`).checked || document.getElementById(`document${rowId}`).files.length > 0;
+  }
+  if (!valid) {
+    alert('لطفاً این مرحله را کامل کنید');
+    return;
+  }
+  document.getElementById(`step${currentStep}_${rowId}`).classList.add('hidden');
+  document.getElementById(`step${nextStep}_${rowId}`).classList.remove('hidden');
+}
+
+function goBack(rowId, currentStep, prevStep) {
+  document.getElementById(`step${currentStep}_${rowId}`).classList.add('hidden');
+  document.getElementById(`step${prevStep}_${rowId}`).classList.remove('hidden');
+}
+
+function deleteRow(rowId) {
+  if (confirm('آیا از حذف این ردیف مطمئن هستید؟')) {
+    document.getElementById(`row${rowId}`).remove();
+    transactions = transactions.filter(t => t.rowId !== rowId);
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+    isFormActive = false;
+    document.getElementById('addRowButton').classList.remove('disabled');
+    updateSavedTransactions();
+    updateReports();
+  }
+}
+
+function addRow() {
+  const rowCount = transactions.length + 1;
+  const tbody = document.getElementById("transactionBody");
+  const newRow = document.createElement("tr");
+  newRow.id = `row${rowCount}`;
+  newRow.innerHTML = `
+    <td><button onclick="startForm(${rowCount})" class="bg-green-500 text-white p-2">شروع</button></td
