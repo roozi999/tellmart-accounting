@@ -47,22 +47,30 @@ let isFormActive = false;
 let currentUser = null;
 
 window.onload = function() {
-  const loginData = JSON.parse(localStorage.getItem("loginData"));
-  if (loginData && loginData.user) {
-    const now = new Date().getTime();
-    const loginTime = loginData.loginTime;
-    const timeDiff = now - loginTime;
-    const hours24 = 24 * 60 * 60 * 1000;
-    if (timeDiff < hours24) {
-      currentUser = loginData.user;
-      const loginPage = document.getElementById("loginPage");
-      const mainPage = document.getElementById("mainPage");
-      if (loginPage && mainPage) {
-        loginPage.classList.add("hidden");
-        mainPage.classList.remove("hidden");
-        initializeForm(1);
+  const loginDataRaw = localStorage.getItem("loginData");
+  if (loginDataRaw) {
+    try {
+      const loginData = JSON.parse(loginDataRaw);
+      if (loginData && loginData.user) {
+        const now = new Date().getTime();
+        const loginTime = loginData.loginTime;
+        const timeDiff = now - loginTime;
+        const hours24 = 24 * 60 * 60 * 1000;
+        if (timeDiff < hours24) {
+          currentUser = loginData.user;
+          const loginPage = document.getElementById("loginPage");
+          const mainPage = document.getElementById("mainPage");
+          if (loginPage && mainPage) {
+            loginPage.classList.add("hidden");
+            mainPage.classList.remove("hidden");
+            initializeForm(1);
+          }
+        } else {
+          localStorage.removeItem("loginData");
+        }
       }
-    } else {
+    } catch (e) {
+      console.error("Error parsing loginData from localStorage:", e);
       localStorage.removeItem("loginData");
     }
   }
@@ -104,6 +112,7 @@ function logout() {
   if (dataEntryPage) dataEntryPage.classList.add("hidden");
   if (reportPage) reportPage.classList.add("hidden");
   if (loginPage) loginPage.classList.remove("hidden");
+}
 }
 function initializeStageSelector() {
   const stageSelector = document.getElementById("stageSelector");
