@@ -46,6 +46,20 @@ let logs = JSON.parse(localStorage.getItem("logs")) || [];
 let isFormActive = false;
 let currentUser = null;
 
+window.onload = function() {
+  const loginData = JSON.parse(localStorage.getItem("loginData"));
+  if (loginData && loginData.user) {
+    const now = new Date().getTime();
+    const timeDiff = now - loginData.loginTime;
+    const hours24 = 24 * 60 * 60 * 1000;
+    if (timeDiff < hours24) {
+      currentUser = loginData.user;
+      showMainUI();
+    } else {
+      localStorage.removeItem("loginData");
+    }
+  }
+};
 
 function login() {
   const username = document.getElementById("username").value.trim();
@@ -68,6 +82,17 @@ function login() {
   }
 }
 
+function showMainUI() {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("mainPage").classList.remove("hidden");
+
+  const manageDataButton = document.getElementById("manageDataButton");
+  if (currentUser.access.includes("dataEntry")) {
+    manageDataButton.classList.remove("hidden");
+  } else {
+    manageDataButton.classList.add("hidden");
+  }
+}
 
 function logout() {
   localStorage.removeItem("loginData");
@@ -77,6 +102,7 @@ function logout() {
   document.getElementById("reportPage").classList.add("hidden");
   document.getElementById("loginPage").classList.remove("hidden");
 }
+
 function initializeStageSelector() {
   const stageSelector = document.getElementById("stageSelector");
   stageSelector.innerHTML = '<option value="">مرحله را انتخاب کنید</option>';
@@ -86,6 +112,10 @@ function initializeStageSelector() {
 }
 
 function showStageManagement() {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stageId = parseInt(document.getElementById("stageSelector").value);
   const contentDiv = document.getElementById("stageManagementContent");
   contentDiv.innerHTML = "";
@@ -163,6 +193,10 @@ function updateStageOptions(stageId) {
   }
 }
 function updateStageTitle(stageId) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const title = document.getElementById(`stageTitle${stageId}`).value;
   if (title) {
     const stage = stages.find(s => s.id === parseInt(stageId));
@@ -174,6 +208,10 @@ function updateStageTitle(stageId) {
 }
 
 function addStageOption(stageId) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const value = document.getElementById(`optionValue${stageId}`).value;
   const label = document.getElementById(`optionLabel${stageId}`).value;
   if (value && label) {
@@ -193,6 +231,10 @@ function addStageOption(stageId) {
 }
 
 function updateOption(stageId, oldValue) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newValue = document.getElementById(`optionValue${stageId}_${oldValue}`).value;
   const newLabel = document.getElementById(`optionLabel${stageId}_${oldValue}`).value;
   if (newValue && newLabel) {
@@ -214,6 +256,10 @@ function updateOption(stageId, oldValue) {
 }
 
 function removeStageOption(stageId, value) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.options = stage.options.filter(opt => opt.value !== value);
   if (stageId === 1) {
@@ -225,6 +271,10 @@ function removeStageOption(stageId, value) {
 }
 
 function updateCategoryLabel(stageId, type, oldCategory) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newCategory = document.getElementById(`categoryLabel${stageId}_${type}_${oldCategory}`).value;
   if (newCategory) {
     const stage = stages.find(s => s.id === parseInt(stageId));
@@ -236,6 +286,10 @@ function updateCategoryLabel(stageId, type, oldCategory) {
 }
 
 function addSubOption(stageId, type, category) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const value = document.getElementById(`subOptionValue${stageId}_${type}_${category}`).value;
   const label = document.getElementById(`subOptionLabel${stageId}_${type}_${category}`).value;
   if (value && label) {
@@ -251,6 +305,10 @@ function addSubOption(stageId, type, category) {
 }
 
 function updateSubOption(stageId, type, category, oldValue) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newValue = document.getElementById(`subOptionValue${stageId}_${type}_${category}_${oldValue}`).value;
   const newLabel = document.getElementById(`subOptionLabel${stageId}_${type}_${category}_${oldValue}`).value;
   if (newValue && newLabel) {
@@ -264,6 +322,10 @@ function updateSubOption(stageId, type, category, oldValue) {
 }
 
 function removeSubOption(stageId, type, category, value) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.options[type][category] = stage.options[type][category].filter(opt => opt.value !== value);
   localStorage.setItem("stages", JSON.stringify(stages));
@@ -271,6 +333,10 @@ function removeSubOption(stageId, type, category, value) {
 }
 
 function addTehaterySubOption(stageId, type, category) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const income = document.getElementById(`subOptionIncome${stageId}_${type}_${category}`).value;
   const cost = document.getElementById(`subOptionCost${stageId}_${type}_${category}`).value;
   if (income && cost) {
@@ -284,6 +350,10 @@ function addTehaterySubOption(stageId, type, category) {
 }
 
 function updateTehaterySubOption(stageId, type, category, oldIncome, oldCost) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newIncome = document.getElementById(`subOptionIncome${stageId}_${type}_${category}_${oldIncome}`).value;
   const newCost = document.getElementById(`subOptionCost${stageId}_${type}_${category}_${oldCost}`).value;
   if (newIncome && newCost) {
@@ -297,12 +367,21 @@ function updateTehaterySubOption(stageId, type, category, oldIncome, oldCost) {
 }
 
 function removeTehaterySubOption(stageId, type, category, income, cost) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.options[type][category] = stage.options[type][category].filter(item => !(item.income === income && item.cost === cost));
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
+
 function addSourceAccount(stageId) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const value = document.getElementById(`sourceAccountValue${stageId}`).value;
   const label = document.getElementById(`sourceAccountLabel${stageId}`).value;
   if (value && label) {
@@ -318,6 +397,10 @@ function addSourceAccount(stageId) {
 }
 
 function updateSourceAccount(stageId, oldValue) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newValue = document.getElementById(`sourceAccountValue${stageId}_${oldValue}`).value;
   const newLabel = document.getElementById(`sourceAccountLabel${stageId}_${oldValue}`).value;
   if (newValue && newLabel) {
@@ -331,6 +414,10 @@ function updateSourceAccount(stageId, oldValue) {
 }
 
 function removeSourceAccount(stageId, value) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.sourceAccounts = stage.sourceAccounts.filter(a => a.value !== value);
   localStorage.setItem("stages", JSON.stringify(stages));
@@ -338,6 +425,10 @@ function removeSourceAccount(stageId, value) {
 }
 
 function addDestAccount(stageId) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const value = document.getElementById(`destAccountValue${stageId}`).value;
   const label = document.getElementById(`destAccountLabel${stageId}`).value;
   if (value && label) {
@@ -353,6 +444,10 @@ function addDestAccount(stageId) {
 }
 
 function updateDestAccount(stageId, oldValue) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const newValue = document.getElementById(`destAccountValue${stageId}_${oldValue}`).value;
   const newLabel = document.getElementById(`destAccountLabel${stageId}_${oldValue}`).value;
   if (newValue && newLabel) {
@@ -366,6 +461,10 @@ function updateDestAccount(stageId, oldValue) {
 }
 
 function removeDestAccount(stageId, value) {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
   localStorage.setItem("stages", JSON.stringify(stages));
@@ -446,6 +545,7 @@ function initializeForm(rowId) {
   });
   updateAccountOptions(rowId);
 }
+
 function startForm(rowId) {
   if (isFormActive) {
     alert('لطفاً فرم فعلی را ذخیره کنید');
@@ -556,6 +656,7 @@ function deleteRow(rowId) {
     updateReports();
   }
 }
+
 function addRow() {
   const rowCount = transactions.length + 1;
   const tbody = document.getElementById("transactionBody");
@@ -570,7 +671,7 @@ function addRow() {
           <select id="type${rowCount}" onchange="showTypeOptions(${rowCount})" class="border p-2 w-full">
             <option value="">انتخاب کنید</option>
           </select>
-          <button onclick="nextStep(${rowCount}, 1, 2)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
+          <button onclick="nextStep(${rowCount}, 1, 2)" class="bg-blue-500 text Cowan-white p-2 mt-2">بعدی</button>
         </div>
         <div id="step2_${rowCount}" class="hidden mb-2">
           <label id="stage2Label">مرحله 2: دسته‌بندی</label>
@@ -644,6 +745,7 @@ function addRow() {
   tbody.appendChild(newRow);
   initializeForm(rowCount);
 }
+
 function saveTransaction(rowId, isEdit = false) {
   const type = document.getElementById(`type${rowId}`).value;
   const description = document.getElementById(`description${rowId}`).value;
@@ -771,6 +873,10 @@ function showReports() {
 }
 
 function showDataEntry() {
+  if (!currentUser.access.includes("dataEntry")) {
+    alert("شما دسترسی به این صفحه ندارید");
+    return;
+  }
   document.getElementById('mainPage').classList.add('hidden');
   document.getElementById('reportPage').classList.add('hidden');
   document.getElementById('dataEntryPage').classList.remove('hidden');
@@ -806,57 +912,4 @@ function updateReports() {
 
 function filterReports() {
   updateReports();
-}
-window.onload = function () {
-  const loginData = JSON.parse(localStorage.getItem("loginData"));
-  if (loginData && loginData.user) {
-    const now = new Date().getTime();
-    const loginTime = loginData.loginTime;
-    const timeDiff = now - loginTime;
-    const hours24 = 24 * 60 * 60 * 1000;
-    if (timeDiff < hours24) {
-      currentUser = loginData.user;
-      showMainUI();
-      return;
-    }
-  }
-  localStorage.removeItem("loginData");
-};
-
-function showMainUI() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("mainPage").classList.remove("hidden");
-
-  if (currentUser.access.includes("form")) {
-    document.getElementById("startFormButton").classList.remove("hidden");
-  }
-
-  if (currentUser.access.includes("reports")) {
-    document.getElementById("reportButton").classList.remove("hidden");
-  }
-
-  if (currentUser.username === "roozbeh") {
-    document.getElementById("manageDataButton").classList.remove("hidden");
-  } else {
-    document.getElementById("manageDataButton").classList.add("hidden");
-  }
-}
-function showMainUI() {
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("mainPage").classList.remove("hidden");
-
-  if (currentUser.access.includes("form")) {
-    document.getElementById("startFormButton").classList.remove("hidden");
-  }
-
-  if (currentUser.access.includes("reports")) {
-    document.getElementById("reportButton").classList.remove("hidden");
-  }
-
-  // فقط roozbeh دکمه مدیریت داده‌ها را ببیند
-  if (currentUser.username === "roozbeh") {
-    document.getElementById("manageDataButton").classList.remove("hidden");
-  } else {
-    document.getElementById("manageDataButton").classList.add("hidden");
-  }
 }
