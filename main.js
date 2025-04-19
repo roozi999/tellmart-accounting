@@ -56,7 +56,7 @@ window.onload = function() {
       loginPage.classList.add("hidden");
       mainPage.classList.remove("hidden");
       const dataEntryButton = document.getElementById("dataEntryButton");
-      if (dataEntryButton && currentUser.username === "roozbeh") {
+      if (dataEntryButton && currentUser.access.includes("dataEntry")) {
         dataEntryButton.classList.remove("hidden");
       }
     }
@@ -81,7 +81,7 @@ function login() {
       loginPage.classList.add("hidden");
       mainPage.classList.remove("hidden");
       const dataEntryButton = document.getElementById("dataEntryButton");
-      if (dataEntryButton && currentUser.username === "roozbeh") {
+      if (dataEntryButton && currentUser.access.includes("dataEntry")) {
         dataEntryButton.classList.remove("hidden");
       }
     }
