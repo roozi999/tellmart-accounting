@@ -724,7 +724,7 @@ function addRow() {
           </div>
           <div id="step3_${rowCount}" class="hidden mb-2">
             <label id="stage3Label">مرحله 3: مبلغ (ریال)</label>
-            <input type="text" id="amount${rowCount}" oninput="formatAmount(${rowCount" class="border p-2 w-full" placeholder="مثال: 200,000">
+            <input type="text" id="amount${rowCount}" oninput="formatAmount(${rowCount)" class="border p-2 w-full" placeholder="مثال: 200,000">
             <p id="amountText${rowCount}" class="text-sm text-gray-600 mt-1"></p>
             <label class="flex items-center mt-2">
               <input type="checkbox" id="confirmAmount${rowCount}" class="mr-2">
