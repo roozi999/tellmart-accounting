@@ -101,7 +101,7 @@ function login() {
   }
 }
 
-function logout() 
+function logout() {
   localStorage.removeItem("loginData");
   currentUser = null;
   const mainPage = document.getElementById("mainPage");
