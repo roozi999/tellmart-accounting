@@ -900,4 +900,4 @@ function updateSavedTransactions() {
       <td>${(t.amount / 10).toLocaleString('en-US')}</td>
       <td>${t.reason}</td>
       <td>${t.sourceAccount}</td>
-      <td>${t.destAccount}</td>
+      <td>${t.destAccount}</td>.
