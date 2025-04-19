@@ -841,3 +841,22 @@ function showMainUI() {
     document.getElementById("manageDataButton").classList.add("hidden");
   }
 }
+function showMainUI() {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("mainPage").classList.remove("hidden");
+
+  if (currentUser.access.includes("form")) {
+    document.getElementById("startFormButton").classList.remove("hidden");
+  }
+
+  if (currentUser.access.includes("reports")) {
+    document.getElementById("reportButton").classList.remove("hidden");
+  }
+
+  // فقط roozbeh دکمه مدیریت داده‌ها را ببیند
+  if (currentUser.username === "roozbeh") {
+    document.getElementById("manageDataButton").classList.remove("hidden");
+  } else {
+    document.getElementById("manageDataButton").classList.add("hidden");
+  }
+}
