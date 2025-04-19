@@ -42,9 +42,25 @@ let stages = JSON.parse(localStorage.getItem("stages")) || [
   {id: 9, title: "پایان", type: "button"}
 ];
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
-let logs = JSON.parse(localStorage.getItem("logs")) || [];
+let logs = [];
 let isFormActive = false;
 let currentUser = null;
+
+async function saveLogToServer(log) {
+  try {
+    const response = await fetch('/.netlify/functions/save-log', {
+      method: 'POST',
+      body: JSON.stringify(log),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const result = await response.json();
+    console.log('Log saved to server:', result);
+  } catch (error) {
+    console.error('Error saving log to server:', error);
+  }
+}
 
 window.onload = function() {
   const loginData = JSON.parse(localStorage.getItem("loginData"));
@@ -102,7 +118,6 @@ function logout() {
   document.getElementById("reportPage").classList.add("hidden");
   document.getElementById("loginPage").classList.remove("hidden");
 }
-
 function initializeStageSelector() {
   const stageSelector = document.getElementById("stageSelector");
   stageSelector.innerHTML = '<option value="">مرحله را انتخاب کنید</option>';
@@ -141,7 +156,6 @@ function showStageManagement() {
   contentDiv.innerHTML = html;
   updateStageOptions(stage.id);
 }
-
 function updateStageOptions(stageId) {
   const stage = stages.find(s => s.id === parseInt(stageId));
   if (!stage) return;
@@ -200,7 +214,16 @@ function updateStageTitle(stageId) {
   const title = document.getElementById(`stageTitle${stageId}`).value;
   if (title) {
     const stage = stages.find(s => s.id === parseInt(stageId));
+    const oldTitle = stage.title;
     stage.title = title;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی عنوان مرحله',
+      details: `عنوان مرحله ${stageId} از "${oldTitle}" به "${title}" تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     initializeStageSelector();
     showStageManagement();
@@ -218,6 +241,14 @@ function addStageOption(stageId) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     if (!stage.options.some(opt => opt.value === value)) {
       stage.options.push({value, label});
+      const log = {
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'اضافه کردن گزینه',
+        details: `گزینه "${label}" (مقدار: ${value}) به مرحله ${stageId} اضافه شد`
+      };
+      logs.push(log);
+      saveLogToServer(log);
       if (stageId === 1) {
         stages.find(s => s.id === 2).options[value] = [];
         stages.find(s => s.id === 4).options[value] = {};
@@ -240,8 +271,17 @@ function updateOption(stageId, oldValue) {
   if (newValue && newLabel) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     const option = stage.options.find(opt => opt.value === oldValue);
+    const oldLabel = option.label;
     option.value = newValue;
     option.label = newLabel;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی گزینه',
+      details: `گزینه مرحله ${stageId} از مقدار "${oldValue}" (برچسب: ${oldLabel}) به مقدار "${newValue}" (برچسب: ${newLabel}) تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     if (stageId === 1) {
       const stage2 = stages.find(s => s.id === 2);
       const stage4 = stages.find(s => s.id === 4);
@@ -261,7 +301,16 @@ function removeStageOption(stageId, value) {
     return;
   }
   const stage = stages.find(s => s.id === parseInt(stageId));
+  const option = stage.options.find(opt => opt.value === value);
   stage.options = stage.options.filter(opt => opt.value !== value);
+  const log = {
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    action: 'حذف گزینه',
+    details: `گزینه "${option.label}" (مقدار: ${value}) از مرحله ${stageId} حذف شد`
+  };
+  logs.push(log);
+  saveLogToServer(log);
   if (stageId === 1) {
     delete stages.find(s => s.id === 2).options[value];
     delete stages.find(s => s.id === 4).options[value];
@@ -280,6 +329,14 @@ function updateCategoryLabel(stageId, type, oldCategory) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     stage.options[type][newCategory] = stage.options[type][oldCategory];
     delete stage.options[type][oldCategory];
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی عنوان زیرمجموعه',
+      details: `عنوان زیرمجموعه در مرحله ${stageId}، نوع ${type} از "${oldCategory}" به "${newCategory}" تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
   }
@@ -296,6 +353,14 @@ function addSubOption(stageId, type, category) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     if (!stage.options[type][category].some(opt => opt.value === value)) {
       stage.options[type][category].push({value, label});
+      const log = {
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'اضافه کردن گزینه زیرمجموعه',
+        details: `گزینه "${label}" (مقدار: ${value}) به زیرمجموعه "${category}" در نوع "${type}" مرحله ${stageId} اضافه شد`
+      };
+      logs.push(log);
+      saveLogToServer(log);
       localStorage.setItem("stages", JSON.stringify(stages));
       updateStageOptions(stageId);
       document.getElementById(`subOptionValue${stageId}_${type}_${category}`).value = "";
@@ -314,8 +379,17 @@ function updateSubOption(stageId, type, category, oldValue) {
   if (newValue && newLabel) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     const option = stage.options[type][category].find(opt => opt.value === oldValue);
+    const oldLabel = option.label;
     option.value = newValue;
     option.label = newLabel;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی گزینه زیرمجموعه',
+      details: `گزینه زیرمجموعه "${category}" در نوع "${type}" مرحله ${stageId} از مقدار "${oldValue}" (برچسب: ${oldLabel}) به مقدار "${newValue}" (برچسب: ${newLabel}) تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
   }
@@ -327,7 +401,16 @@ function removeSubOption(stageId, type, category, value) {
     return;
   }
   const stage = stages.find(s => s.id === parseInt(stageId));
+  const option = stage.options[type][category].find(opt => opt.value === value);
   stage.options[type][category] = stage.options[type][category].filter(opt => opt.value !== value);
+  const log = {
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    action: 'حذف گزینه زیرمجموعه',
+    details: `گزینه "${option.label}" (مقدار: ${value}) از زیرمجموعه "${category}" در نوع "${type}" مرحله ${stageId} حذف شد`
+  };
+  logs.push(log);
+  saveLogToServer(log);
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
@@ -342,6 +425,14 @@ function addTehaterySubOption(stageId, type, category) {
   if (income && cost) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     stage.options[type][category].push({income, cost});
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'اضافه کردن گزینه تهاتری',
+      details: `گزینه تهاتری با درآمد "${income}" و هزینه "${cost}" به زیرمجموعه "${category}" در نوع "${type}" مرحله ${stageId} اضافه شد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
     document.getElementById(`subOptionIncome${stageId}_${type}_${category}`).value = "";
@@ -361,6 +452,14 @@ function updateTehaterySubOption(stageId, type, category, oldIncome, oldCost) {
     const option = stage.options[type][category].find(opt => opt.income === oldIncome && opt.cost === oldCost);
     option.income = newIncome;
     option.cost = newCost;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی گزینه تهاتری',
+      details: `گزینه تهاتری در زیرمجموعه "${category}"، نوع "${type}"، مرحله ${stageId} از درآمد "${oldIncome}" و هزینه "${oldCost}" به درآمد "${newIncome}" و هزینه "${newCost}" تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
   }
@@ -373,10 +472,17 @@ function removeTehaterySubOption(stageId, type, category, income, cost) {
   }
   const stage = stages.find(s => s.id === parseInt(stageId));
   stage.options[type][category] = stage.options[type][category].filter(item => !(item.income === income && item.cost === cost));
+  const log = {
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    action: 'حذف گزینه تهاتری',
+    details: `گزینه تهاتری با درآمد "${income}" و هزینه "${cost}" از زیرمجموعه "${category}"، نوع "${type}"، مرحله ${stageId} حذف شد`
+  };
+  logs.push(log);
+  saveLogToServer(log);
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
-
 function addSourceAccount(stageId) {
   if (!currentUser.access.includes("dataEntry")) {
     alert("شما دسترسی به این صفحه ندارید");
@@ -388,6 +494,14 @@ function addSourceAccount(stageId) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     if (!stage.sourceAccounts.some(account => account.value === value)) {
       stage.sourceAccounts.push({value, label});
+      const log = {
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'اضافه کردن حساب مبدا',
+        details: `حساب مبدا "${label}" (مقدار: ${value}) به مرحله ${stageId} اضافه شد`
+      };
+      logs.push(log);
+      saveLogToServer(log);
       localStorage.setItem("stages", JSON.stringify(stages));
       updateStageOptions(stageId);
       document.getElementById(`sourceAccountValue${stageId}`).value = "";
@@ -406,8 +520,17 @@ function updateSourceAccount(stageId, oldValue) {
   if (newValue && newLabel) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     const account = stage.sourceAccounts.find(acc => acc.value === oldValue);
+    const oldLabel = account.label;
     account.value = newValue;
     account.label = newLabel;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی حساب مبدا',
+      details: `حساب مبدا در مرحله ${stageId} از مقدار "${oldValue}" (برچسب: ${oldLabel}) به مقدار "${newValue}" (برچسب: ${newLabel}) تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
   }
@@ -419,7 +542,16 @@ function removeSourceAccount(stageId, value) {
     return;
   }
   const stage = stages.find(s => s.id === parseInt(stageId));
+  const account = stage.sourceAccounts.find(acc => acc.value === value);
   stage.sourceAccounts = stage.sourceAccounts.filter(a => a.value !== value);
+  const log = {
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    action: 'حذف حساب مبدا',
+    details: `حساب مبدا "${account.label}" (مقدار: ${value}) از مرحله ${stageId} حذف شد`
+  };
+  logs.push(log);
+  saveLogToServer(log);
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
@@ -435,6 +567,14 @@ function addDestAccount(stageId) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     if (!stage.destAccounts.some(account => account.value === value)) {
       stage.destAccounts.push({value, label});
+      const log = {
+        username: currentUser.username,
+        date: new Date().toISOString(),
+        action: 'اضافه کردن حساب مقصد',
+        details: `حساب مقصد "${label}" (مقدار: ${value}) به مرحله ${stageId} اضافه شد`
+      };
+      logs.push(log);
+      saveLogToServer(log);
       localStorage.setItem("stages", JSON.stringify(stages));
       updateStageOptions(stageId);
       document.getElementById(`destAccountValue${stageId}`).value = "";
@@ -453,8 +593,17 @@ function updateDestAccount(stageId, oldValue) {
   if (newValue && newLabel) {
     const stage = stages.find(s => s.id === parseInt(stageId));
     const account = stage.destAccounts.find(acc => acc.value === oldValue);
+    const oldLabel = account.label;
     account.value = newValue;
     account.label = newLabel;
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'به‌روزرسانی حساب مقصد',
+      details: `حساب مقصد در مرحله ${stageId} از مقدار "${oldValue}" (برچسب: ${oldLabel}) به مقدار "${newValue}" (برچسب: ${newLabel}) تغییر کرد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("stages", JSON.stringify(stages));
     updateStageOptions(stageId);
   }
@@ -466,7 +615,16 @@ function removeDestAccount(stageId, value) {
     return;
   }
   const stage = stages.find(s => s.id === parseInt(stageId));
+  const account = stage.destAccounts.find(acc => acc.value === value);
   stage.destAccounts = stage.destAccounts.filter(a => a.value !== value);
+  const log = {
+    username: currentUser.username,
+    date: new Date().toISOString(),
+    action: 'حذف حساب مقصد',
+    details: `حساب مقصد "${account.label}" (مقدار: ${value}) از مرحله ${stageId} حذف شد`
+  };
+  logs.push(log);
+  saveLogToServer(log);
   localStorage.setItem("stages", JSON.stringify(stages));
   updateStageOptions(stageId);
 }
@@ -475,7 +633,7 @@ function numberToWords(num) {
   if (num === 0) return 'صفر';
   const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
   const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-  const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+  const tens = ['', 'ده, 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
   const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
   const thousands = ['', 'هزار', 'میلیون', 'میلیارد'];
 
@@ -545,7 +703,6 @@ function initializeForm(rowId) {
   });
   updateAccountOptions(rowId);
 }
-
 function startForm(rowId) {
   if (isFormActive) {
     alert('لطفاً فرم فعلی را ذخیره کنید');
@@ -601,7 +758,6 @@ function updateAccountOptions(rowId) {
     destAccountSelect.innerHTML += `<option value="${account.value}">${account.label}</option>`;
   });
 }
-
 function toggleInvoice(rowId) {
   const noInvoice = document.getElementById(`noInvoice${rowId}`).checked;
   document.getElementById(`invoice${rowId}`).disabled = noInvoice;
@@ -648,7 +804,16 @@ function goBack(rowId, currentStep, prevStep) {
 function deleteRow(rowId) {
   if (confirm('آیا از حذف این ردیف مطمئن هستید؟')) {
     document.getElementById(`row${rowId}`).remove();
+    const deletedTransaction = transactions.find(t => t.rowId === rowId);
     transactions = transactions.filter(t => t.rowId !== rowId);
+    const log = {
+      username: currentUser.username,
+      date: new Date().toISOString(),
+      action: 'حذف ردیف',
+      details: `ردیف ${rowId} با جزئیات: نوع=${deletedTransaction.type}, دسته‌بندی=${deletedTransaction.category}, مبلغ=${deletedTransaction.amount} حذف شد`
+    };
+    logs.push(log);
+    saveLogToServer(log);
     localStorage.setItem("transactions", JSON.stringify(transactions));
     isFormActive = false;
     document.getElementById('addRowButton').classList.remove('disabled');
@@ -671,7 +836,7 @@ function addRow() {
           <select id="type${rowCount}" onchange="showTypeOptions(${rowCount})" class="border p-2 w-full">
             <option value="">انتخاب کنید</option>
           </select>
-          <button onclick="nextStep(${rowCount}, 1, 2)" class="bg-blue-500 text Cowan-white p-2 mt-2">بعدی</button>
+          <button onclick="nextStep(${rowCount}, 1, 2)" class="bg-blue-500 text-white p-2 mt-2">بعدی</button>
         </div>
         <div id="step2_${rowCount}" class="hidden mb-2">
           <label id="stage2Label">مرحله 2: دسته‌بندی</label>
@@ -745,7 +910,6 @@ function addRow() {
   tbody.appendChild(newRow);
   initializeForm(rowCount);
 }
-
 function saveTransaction(rowId, isEdit = false) {
   const type = document.getElementById(`type${rowId}`).value;
   const description = document.getElementById(`description${rowId}`).value;
@@ -767,26 +931,28 @@ function saveTransaction(rowId, isEdit = false) {
   const save = () => {
     if (isEdit) {
       const index = transactions.findIndex(t => t.rowId === rowId);
+      const oldTransaction = transactions[index];
       transactions[index] = transaction;
-      logs.push({
-        rowId,
+      const log = {
         username: currentUser.username,
         date: new Date().toISOString(),
-        action: 'ویرایش',
-        details: `ردیف ${rowId} ویرایش شد`
-      });
+        action: 'ویرایش ردیف',
+        details: `ردیف ${rowId} ویرایش شد - نوع: از "${oldTransaction.type}" به "${transaction.type}"، دسته‌بندی: از "${oldTransaction.category}" به "${transaction.category}"، مبلغ: از "${oldTransaction.amount}" به "${transaction.amount}"`
+      };
+      logs.push(log);
+      saveLogToServer(log);
     } else {
       transactions.push(transaction);
-      logs.push({
-        rowId,
+      const log = {
         username: currentUser.username,
         date: new Date().toISOString(),
-        action: 'ایجاد',
-        details: `ردیف ${rowId} ایجاد شد`
-      });
+        action: 'اضافه کردن ردیف',
+        details: `ردیف ${rowId} اضافه شد - نوع: "${transaction.type}"، دسته‌بندی: "${transaction.category}"، مبلغ: "${transaction.amount}"`
+      };
+      logs.push(log);
+      saveLogToServer(log);
     }
     localStorage.setItem("transactions", JSON.stringify(transactions));
-    localStorage.setItem("logs", JSON.stringify(logs));
     isFormActive = false;
     document.getElementById('addRowButton').classList.remove('disabled');
     document.getElementById(`form${rowId}`).classList.add('hidden');
