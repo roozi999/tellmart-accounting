@@ -805,3 +805,4 @@ function editTransaction(rowId) {
     updateReasonOptions(formId);
     document.getElementById(`reason${formId}`).value = transaction.reason;
     document.getElementById(`amount${formId}`).value = Number(transaction.amount).toLocaleString
+	.
